@@ -1,4 +1,4 @@
-'''plot data
+'''plot calibration data
 Created by Amir Ohad 2/9/2024'''
 #%%
 import pandas as pd
@@ -6,8 +6,8 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 #%%
-# Read the CSV file
-filename = r"C:\Users\Amir\Documents\PHD\Experiments\Force Measurements\Exp2_Pendulum\Calibrations\20200922 Force calibration 2 pulley+weights\force_calibration_curve.csv"
+# Read the CSV file from the supplementary data folder under "Calibration"
+filename = r"C:\Users\Amir\Documents\PHD\Thesis\My Articles\0 - Flexible dynamic force measurement method via physical pendulum\Data\Force calibration data 1\force_calibration_curve.csv"
 data = pd.read_csv(filename)
 
 # Extract the columns you want to plot
