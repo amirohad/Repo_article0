@@ -14,7 +14,6 @@ B. event class
 4. calculate force for time series
 5. h5 functions
 6. get point coordinates near support-> get angle relative to horizontal
-7. get twine initiation time
 
 @author: Amir
 """
@@ -197,7 +196,7 @@ class Event:
             self.auto_dec_time_min += compensate
         self.frm_dec_side = self.auto_dec_index
         self.frm_dec_top = self.auto_dec_index
-        print(self.auto_dec_index,self.auto_dec_angle)
+        # print(f'{self.auto_dec_angle=}') print automated decision angle
 
     def event_base_calcs(self,view,track_dict,contact_dict):
         '''side view, get coordinates of: x,z track pix,
