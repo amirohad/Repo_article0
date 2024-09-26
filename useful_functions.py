@@ -77,6 +77,7 @@ import random
 import inspect
 from tqdm import tqdm
 # from progress_bar import InitBar # progress bar
+print('hi')
 #%% 1 get length of section in image
 def get_pix_length(filename,length_name):
     img = cv2.imread(filename) # load file
@@ -933,7 +934,7 @@ def powerfunc(x, a, b, c): return a * x**b + c
 
 #%% 43 fit with errors
 def fit_w_err(ax,x,dx,y,dy,fit_func = linfunc, data_color = 'blue',
-              fit_color = 'red',add_legend = False, legend_loc='best'):
+              fit_color = 'red',add_legend = False, legend_loc='best',data_alpha=0.5):
     '''Fit data to the provided function and plot with error bars.
 
     Parameters:
@@ -955,7 +956,7 @@ def fit_w_err(ax,x,dx,y,dy,fit_func = linfunc, data_color = 'blue',
     if add_legend: label_data='Data'
     else: label_data=None
     ax.errorbar(x, y, xerr=abs(dx), yerr=abs(dy), fmt='+',
-                color=data_color,label=label_data)
+                color=data_color,label=label_data, alpha=data_alpha)
     # fit with errors via curve fit
     popt,pcov = scipy.optimize.curve_fit(fit_func, x, y,
             p0=None, sigma=np.sqrt(dx**2+dy**2), absolute_sigma=True)
@@ -979,7 +980,7 @@ def fit_w_err(ax,x,dx,y,dy,fit_func = linfunc, data_color = 'blue',
     # lower = (popt[0]-np.diag(pcov)[0])*x+popt[1]-np.diag(pcov)[1]
     # ax.fill_between(np.arange(min(x),max(x),(max(x)-min(x))/len(x)),lower,upper)
     if add_legend: ax.legend(loc=legend_loc)
-    print(rf'{popt=},{pcov=},{chi_squared_red=},{chi_sr_std=},{r_squared=}')
+    print(rf'{popt=},{pcov=},{chi_squared_red=:.2e},{chi_sr_std=:.2e},{r_squared=:.2e}')
     return popt,pcov#,r_squared,chi_squared_red
 #%% 44 get image resolution (can change other data type)
 

@@ -920,7 +920,7 @@ for i in range(n_tot):
         elif k==4: var = events[i].work
         elif k==5: var = events[i].L_contact2stemtip_cm
         elif k==6: var = max(events[i].F_bean)
-        elif k==7: var = max(events[i].torque)
+        elif k==7: var = max(events[i].torque) # check torque calculation
         elif k==8: var = events[i].integ_torque
 
     except:
