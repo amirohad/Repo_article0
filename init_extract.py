@@ -116,7 +116,7 @@ df.to_excel(writer)
 writer.close()
 
 #%% measure distance on specific img
-filename = r"C:\Users\Amir\Desktop\DSC_9028.JPG"
+filename = r"C:\Users\Amir\Documents\PHD\Experiments\Force Measurements\Exp2_Pendulum\Calibrations\fluctuations_1sec_int\DSC_8159.JPG"
 line = []
 live_line(filename,'contact distance',line) # press q to finish
 sumlen = 0

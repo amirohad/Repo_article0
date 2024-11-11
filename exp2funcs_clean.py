@@ -405,9 +405,20 @@ def alpha_of_t(lsup_pix,lsup_cm,dist_pix,pix2cm,view):
 def calc_F(d_contact,l_sup_cm,phi_t,m_sup):
     gcgs=980
     F_mg = 1000*m_sup * l_sup_cm * m.tan(phi_t)/(2*(l_sup_cm-d_contact))
-# the force applied by bean stem in grams(!)
-# to get the force in dyne-> *gcgs=980 cm/s^2
+# the force applied by bean stem in in dyne
+# to get the force in mN - multiply by 1e-5
     return abs(F_mg)
+
+# def calc_dF(d_contact, dd_contact, l_sup_cm, dm_sup, phi_t, dphi_t, m_sup, dm_sup):
+def calc_dF(d_contact, dd_contact, l_sup_cm, phi_t, dphi_t, m_sup):
+    df_w = ((F/w)**2)*(dw)**2
+    # df_g = ((F/g)**2)*(dg)**2
+    df_L = ((F/L)**2)*(((L*l_contact-2*L+2*l_contact)/(2*(L-l_contact)))**2)*(dL)**2
+    df_l_contact =((F/(L-l_contact))**2)*(dl_contact)**2
+    df_alpha = (((F/m.tan(alpha)+F*m.tan(alpha)))**2)*(dalpha)**2
+    dF = m.sqrt(df_w+df_L+df_l_contact+df_alpha)
+    return dF
+ 
 #%% 4. calculate force for time series
 def F_of_t(d_contact,l_sup_cm,phi,m_sup):
     #dl_sup_cm, dd_contact, dm_sup,dphi

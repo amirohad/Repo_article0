@@ -1031,6 +1031,66 @@ def pdDF2xl(path,df):
         df.to_excel(path, index=False)
 
     print(f'Data written to {path}.')
+
+#%% 45 write pandas dataframe to exp folder
+
+def funcget_tracked_data(filename,obj=0,view=[],camera='nikon',contact=[]):
+    '''get tracked data from file, 
+        return x,y,t, index, N- # of lines, C-max tracked obj,T-# of points per track'''
+    with open(filename,"r") as datafile:
+        lines= datafile.readlines()
+        # del lines[0] # remove first line to avoid 2 zero times
+        N=np.size(lines,0) # number of lines
+        xtl=[[]]*N # x top left
+        ytl=[[]]*N # y top left
+        w=[[]]*N # box width
+        h=[[]]*N # box height
+        index=[[]]*N # tracked object index
+        xcntr=[[]]*N # box x center
+        ycntr=[[]]*N # box y center
+        # dist=[[]]*N # distance from equilibrium position
+        timer=[[]]*N # time marks
+        timer[0]=0 # time starts at zero
+        # timer_epoch1=[[]]*N
+        i=0 # count rows
+# x,y,w,h ; start at upper left corner
+        for line in lines:
+            if line==[]: break
+            currentline = line.split(",") # split by ','
+            index[i]=int(currentline[-2]) # get index of tracked object
+            if index[i] in obj:    
+                # print(i)    # if current line belongs to the requested tracked object
+                xtl[i]=float(currentline[0]) # xtl- x top left
+                ytl[i]=float(currentline[1])
+                w[i]=float(currentline[2])
+                h[i]=float(currentline[3])
+                xcntr[i]=xtl[i]+w[i]/2 # calculate x coordinate of box center
+                ycntr[i]=ytl[i]-h[i]/2
+                # if view=='top':
+                #     dist[i]=np.sqrt((xcntr[i]-xcntr[0])**2+(ycntr[i]-ycntr[0])**2)
+                # else:
+                #     dist[i]=abs(xcntr[i]-xcntr[0])
+                
+                timer[i] = 30*i*()
+            else:
+                print('skipped non-selected tracked object')
+                print(timer[i],type(timer[i]),i,currentline)
+            i+=1
+            if i%50 ==0: 
+                print(i)
+                print(currentline)
+
+        # x = np.subtract(xcntr,xcntr[0]) # return x relative to start point
+        # y = np.subtract(ycntr,ycntr[0]) # return y relative to start point
+        timer = np.zeros(N) # initialize timer array
+        round_count = 0 # initialize round count
+        C = max(index) # max number of tracked objects
+        T = int(N/(C-1)) # number of time points per tracked object
+        for i in range(N):
+            if i % (C-1) == 0: # check if a new round starts
+                round_count += 30 # increment round count
+            timer[i] = round_count # assign timer value for each index
+        return xcntr,ycntr,timer,index,N,C,T
 #%% write function source code
 # import inspect
 # lines = inspect.getsource(foo)

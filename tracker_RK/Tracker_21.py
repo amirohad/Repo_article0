@@ -469,7 +469,7 @@ def main():
         
         elem = f"Croped_{i}"
         # video_or_folder_name = r"C:\Users\Roni\Desktop\transfer folder\3D lights\231227\top\{}".format(elem)
-        video_or_folder_name = r"C:\Users\Amir\Documents\PHD\Experiments\Force Measurements\Exp2f_CN_stem_dynamics\1\test"
+        video_or_folder_name = r"C:\Users\Amir\Documents\PHD\Experiments\Force Measurements\Exp2_Pendulum\Calibrations\fluctuations_1sec_int"
         print(video_or_folder_name)
     
         object_name = f"{i}"
