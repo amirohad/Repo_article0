@@ -48,6 +48,7 @@ useful functions for data extraction in twine experiment
 # 43 linear fit with errors
 # 44 get image resolution (can change other data type)
 # 45 write pandas dataframe to excel
+# 46 add grid lines to plot
 @author: Amir
 
 """
@@ -78,8 +79,9 @@ import inspect
 from tqdm import tqdm
 # from progress_bar import InitBar # progress bar
 print('hi')
-#%% 1 get length of section in image
-def get_pix_length(filename,length_name):
+#%% 1 get length of section in image 
+def get_pix_length(filename,length_name='select_length'):
+    '''get length in pix from image- it is the diagonal of the selected roi'''
     img = cv2.imread(filename) # load file
     cv2.namedWindow(length_name,cv2.WINDOW_NORMAL)
     roi = cv2.selectROI(length_name, img,showCrosshair=True, 
@@ -219,7 +221,7 @@ def adjust_len(a,b,choose=[]): # add strt,end?
             b = b[:la]
 
     return a,b
-#%% 11 nd distance between 2 points
+#%% 11 n-d distance between 2 points
 def distance_nd(vec1,vec2):
     '''(x,y,z,)1 , (x,y,z)2 or other dimension vector
     x,y,w,h-> diagonals are: (x,y), (x+w,y+h)'''
@@ -1091,6 +1093,35 @@ def funcget_tracked_data(filename,obj=0,view=[],camera='nikon',contact=[]):
                 round_count += 30 # increment round count
             timer[i] = round_count # assign timer value for each index
         return xcntr,ycntr,timer,index,N,C,T
+#%% 46 round to first significant digit
+
+def round_to_first_significant_digit(num):
+    if num == 0:
+        return 0
+    
+    # Find the order of magnitude (e.g., for 456, magnitude is 10^2)
+    magnitude = m.floor(m.log10(abs(num)))
+    
+    # Normalize the number to have its first significant digit as the most significant
+    normalized_num = num / (10 ** magnitude)
+    
+    # Round to 1 significant digit
+    rounded_num = round(normalized_num, 1)
+    
+    # Scale the number back to the original magnitude
+    return rounded_num * (10 ** magnitude)
+#%% 47 add grid lines to plot
+def set_grid(ax,x_range,y_range): 
+    '''set grid for plot. take 1/5 of each range for major grid, 1/10 for minor'''
+    ax.grid(True, which='both', linestyle='--', linewidth=0.5, alpha=0.7)
+    ax.minorticks_on()
+    ax.tick_params(axis='both', which='both', direction='in', length=5,
+                   width=1, colors='black', grid_color='gray', grid_alpha=0.7)
+    ax.xaxis.set_major_locator(plt.MultipleLocator(round_to_first_significant_digit(x_range/5)))  # Set major grid spacing for x-axis
+    ax.xaxis.set_minor_locator(plt.MultipleLocator(round_to_first_significant_digit(x_range/10))) # Set minor grid spacing for x-axis
+    ax.yaxis.set_major_locator(plt.MultipleLocator(round_to_first_significant_digit(y_range/5)))  # Set major grid spacing for y-axis
+    ax.yaxis.set_minor_locator(plt.MultipleLocator(round_to_first_significant_digit(y_range/10))) # Set minor grid spacing for y-axis
+
 #%% write function source code
 # import inspect
 # lines = inspect.getsource(foo)
