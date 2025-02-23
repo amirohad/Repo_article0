@@ -317,6 +317,8 @@ class Event:
             # 1st calculation:  3D distance and angle by z projection and trig
 
             self.trk_dist = np.sqrt(sum((self.xyz-self.xyz0)**2)) # root of sum of squares
+            self.alpha_old = [m.asin(d/((self.p.Lsup_cm-
+                            self.L_track2suptip_cm))) for d in self.trk_dist]
             self.alpha = [m.asin(d/(2*(self.p.Lsup_cm-
                             self.L_track2suptip_cm))) for d in self.trk_dist] # need  x2 right?
             print()
@@ -335,7 +337,9 @@ class Event:
             self.L_contact2suptip = [b/(m.cos(a))+self.L_track2suptip_cm
                                    for a,b in zip(self.alpha,self.h)] # find hypotenus and add L_track2suptip dist. in cm
             # L_contact2suptip_pix[i] = np.multiply(x,pix2cm[i]) # distance of contact from sup. tip in cm
-
+            # calculate old force
+            self.F_bean_old = F_of_t(self.L_contact2suptip,
+                      self.p.Lsup_cm, self.alpha_old,self.p.m_sup,F_method=1)
             # calculate force 1
             self.F_bean = F_of_t(self.L_contact2suptip,
                       self.p.Lsup_cm, self.alpha,self.p.m_sup,F_method=1)
