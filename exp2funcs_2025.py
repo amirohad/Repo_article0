@@ -73,13 +73,17 @@ class Plant:
         self.pix2cm_s = float(df.at['Side_pix2cm']) # side pixel to cm ratio
         self.pix2cm_t = float(df.at['Top_pix2cm']) # top pixel to cm ratio
 
-        self.Lsup_cm = df.at['Dist_straw_from_hinge(pixels)'] \
-            + df.at['Straw_Length(cm)']*self.pix2cm_s # pendulum lenth in cm: add measured support length with pix2cm converted straw2hinge 
+        # pendulum lenth in cm: add measured support length with pix2cm converted straw2hinge 
+        self.Lsup_cm = df.at['Dist_straw_from_hinge(pixels)']*self.pix2cm_s + df.at['Straw_Length(cm)'] 
         # self.Lsup_cm = self.Lsup_pix*self.pix2cm_s # support lenth in cm
 
         # z position of bottom tip of support
         self.support_base_z_pos_pix = float(df.at['side_equil_ypos-bot_sup(pixels)'])
-        self.support_base_z_pos_pix_new = float(df.at['new_y_pos_supp_bot(pixels)']) # updated z position from side image of supp bottom 
+        try: # if new measurement exists
+            self.support_base_z_pos_pix_new = float(df.at['new_y_pos_supp_bot(pixels)']) # updated z position from side image of supp bottom
+        except: 
+            self.support_base_z_pos_pix_new = self.support_base_z_pos_pix
+            print('no new z position of support bottom')
         # self.support_base_z_pos_cm = self.support_base_z_pos_pix*self.pix2cm_s # not used
         
     def getE(self,E_dict):
@@ -321,15 +325,21 @@ class Event:
             # self.dec_time = (self.frm_dec_top-self.frm0_top)/2
 
             ###################################################################
-            # 1st calculations:  3D distance and angle by z projection and trig
+            # 1st calculations:  3D distance and angle by aprox. z projection and trig
             self.trk_dist = np.sqrt(sum((self.xyz-self.xyz0)**2)) # root of sum of squares
             self.alpha_old = [m.asin(d/((self.p.Lsup_cm-
-                            self.L_track2suptip_cm))) for d in self.trk_dist] # trig error!
+                            self.L_track2suptip_cm))) for d in self.trk_dist] # trig mistake!
+            self.alpha_old_updt_zsup = [m.asin(d/((self.p.Lsup_cm-
+                            self.L_track2suptip_cm_new))) for d in self.trk_dist] # zsup updated
+            
             self.alpha = [m.asin(d/(2*(self.p.Lsup_cm-
                             self.L_track2suptip_cm))) for d in self.trk_dist] # need  x2 in denominator right?
-            if len(self.alpha)>3:
-                self.omega = np.gradient(self.alpha)/30 # angular velocity (1/sec)?
-            # find z projection of contact position on support - check!!
+            self.alpha_updt_zsup = [m.asin(d/(2*(self.p.Lsup_cm-
+                            self.L_track2suptip_cm_new))) for d in self.trk_dist] # zsup updated
+            
+            # if len(self.alpha)>3:
+            #     self.omega = np.gradient(self.alpha)/30 # angular velocity (1/sec)? not used this article
+
             # adjust contact coordantes
             self.x_cont_dec,self.alpha = uf.adjust_len(self.x_cont_dec,self.alpha,choose=self.alpha)
             self.z_cont_dec,self.alpha = uf.adjust_len(self.z_cont_dec,self.alpha,choose=self.alpha)
@@ -338,13 +348,20 @@ class Event:
             # self.h,self.alpha = uf.adjust_len(self.h,self.alpha,choose=self.alpha) # adjust length and trim to decision period
             self.L_contact2suptip = [b/(m.cos(a))+self.L_track2suptip_cm
                                    for a,b in zip(self.alpha,self.h)] # find hypotenus and add L_track2suptip dist. in cm
+            self.L_contact2suptip_updt_zsup = [b/(m.cos(a))+self.L_track2suptip_cm_new
+                                   for a,b in zip(self.alpha_updt_zsup,self.h)] # zsup updated
+            
             # L_contact2suptip_pix[i] = np.multiply(x,pix2cm[i]) # distance of contact from sup. tip in cm
             # calculate old force
             self.F_bean_old = F_of_t(self.L_contact2suptip,
                       self.p.Lsup_cm, self.alpha_old,self.p.m_sup,F_method=1)
+            self.F_bean_old_updt_zsup = F_of_t(self.L_contact2suptip_updt_zsup,
+                      self.p.Lsup_cm, self.alpha_old_updt_zsup,self.p.m_sup,F_method=1) # zsup updated (in alpha and L_contact2suptip)
             # calculate force 1
             self.F_bean = F_of_t(self.L_contact2suptip,
                       self.p.Lsup_cm, self.alpha,self.p.m_sup,F_method=1)
+            self.F_bean_updt_zsup = F_of_t(self.L_contact2suptip_updt_zsup,
+                      self.p.Lsup_cm, self.alpha_updt_zsup,self.p.m_sup,F_method=1) # zsup updated (in alpha and L_contact2suptip)
 
             ###################################################################
             # 2nd calculation: distances and contact length with angles 
@@ -355,44 +372,61 @@ class Event:
             self.r_tr_phi = np.divide(self.xyz[0,::],np.cos(self.phi))
             # calculate alpha via asin(r_tr/((L-h_tip)))
             self.alpha2 = np.arcsin(np.divide(self.r_tr_phi,self.L_tracked))
+            self.alpha2_updt_zsup = np.arcsin(np.divide(self.r_tr_phi,self.L_tracked_new)) # zsup updated
             # get r_c: distance of contact point from z-axis in xy plane
             self.r_c = np.divide(self.x_cont_dec,np.cos(self.phi))
             # caluculate lc - distance of contact from hinge in 3D from alpha angle
             self.l_c_trig = self.r_c/np.sin(self.alpha)
+            self.l_c_trig_updt_zsup = self.r_c/np.sin(self.alpha_updt_zsup) # zsup updated
             # calculate force 2
             self.F_bean_2 = F_of_t(self.l_c_trig,
                       self.p.Lsup_cm, self.alpha2,self.p.m_sup,F_method=2)
+            self.F_bean_2_updt_zsup = F_of_t(self.l_c_trig_updt_zsup,
+                      self.p.Lsup_cm, self.alpha2_updt_zsup,self.p.m_sup,F_method=2) # zsup updated
             
             ###################################################################
             # 3rd calculation: get support vector
             # set equilibrium point as origin (0,0,0), and support hinge as (0,0,L_tracked) in cm
             self.hinge = np.array([0,0,self.L_tracked])
+            self.hinge_updt_zsup = np.array([0,0,self.L_tracked_new]) # zsup updated
             # get r_tr from sum of x and y components squared
-            self.r_tr_xy = np.sqrt(self.xyz[0]**2 + self.xyz[1]**2)
+            self.r_tr_xy_raw = np.sqrt(self.xyz[0]**2 + self.xyz[1]**2)
             # self.r_tr_xy = self.xyz[0]**2 + self.xyz[1]**2 # check without sqrt
-            self.r_tr_xy = self.r_tr_xy - self.r_tr_xy[0] # relative to start point
+            self.r_tr_xy = self.r_tr_xy_raw - self.r_tr_xy_raw[0] # relative to start point
             # calculate alpha via asin(r_tr/((L-h_tip)))
             self.alpha3 = np.arcsin(np.divide(self.r_tr_xy,self.L_tracked))
+            self.alpha3_updt_zsup = np.arcsin(np.divide(self.r_tr_xy,self.L_tracked_new)) # zsup updated
             # p*(x,y,z)track is then the parametrized vector describing the support
             # transpose to allow subtraction of hinge from each point, then transpose back
-            self.dxyz = np.subtract(self.xyz.T,self.hinge).T # vector from hinge to track point. 
+            self.dxyz = np.subtract(self.xyz.T,self.hinge).T # vector from hinge to track point
+            self.dxyz_updt_zsup = np.subtract(self.xyz.T,self.hinge_updt_zsup).T # zsup updated
+            
             self.dz_cont = np.subtract(self.z_cont_dec,self.hinge[2]) # z distance from hinge to contact point
+            self.dz_cont_updt_zsup = np.subtract(self.z_cont_dec,self.hinge_updt_zsup[2]) # zsup updated
             # we extract p for the contact point from the relation
             # p = xc/xtr = yc/ytr = zc/ztr. (but we dont know y from this description)
-            # self.px = np.divide(self.x_cont_dec,self.dxyz[0][:]) # denominator will be close to zero...
+            self.px = np.divide(self.x_cont_dec,self.dxyz[0][:]) # denominator will be close to zero...
             self.pz = np.divide(self.dz_cont,self.dxyz[2][:]) # denominator wont be zero, since dz is ~ L_tracked
+            self.pz_updt_zsup = np.divide(self.dz_cont_updt_zsup,self.dxyz_updt_zsup[2][:]) # zsup updated
             # average of px=xc/xtr and pz=zc/ztr
             # self.p_avg = np.mean([self.px,self.pz]) 
             # get py from the less volitile p (being pz):
             self.yc = np.multiply(self.pz,self.dxyz[1][:])
+            self.yc_updt_zsup = np.multiply(self.pz_updt_zsup,self.dxyz_updt_zsup[1][:]) # zsup updated
             # then we get the contact position (x,y,z)c = p*(xtr,ytr,ztr) - or should i use the x_c and z_c direct, and only extract y_c?
             # self.xyz_contact = np.array(self.xz_contact[0],self.yc,self.xz_contact[1])
             self.xyz_contact = np.multiply(self.pz,self.dxyz)
+            self.xyz_contact_updt_zsup = np.multiply(self.pz_updt_zsup,self.dxyz_updt_zsup) # zsup updated
             # so the contact length lc = sqrt(xc^2+yc^2+zc^2)
             self.l_c_vec = np.sqrt(np.sum(self.xyz_contact**2,axis=0))
+            self.l_c_vec_updt_zsup = np.sqrt(np.sum(self.xyz_contact_updt_zsup**2,axis=0)) # zsup updated
             # calculate force 3 - use same alpha as in method 2
             self.F_bean_3 = F_of_t(self.l_c_vec,
                       self.p.Lsup_cm, self.alpha3,self.p.m_sup,F_method=2)
+            self.F_bean_3_updt_zsup = F_of_t(self.l_c_vec_updt_zsup,
+                      self.p.Lsup_cm, self.alpha3_updt_zsup,self.p.m_sup,F_method=2) # zsup updated
+            self.test_lc = np.concatenate((15*np.ones(len(self.alpha2)//2), 15.5*np.ones(len(self.alpha2)//2)))[:len(self.alpha2)]
+            self.F_bean_test_l = F_of_t(self.test_lc, self.p.Lsup_cm, self.alpha3_updt_zsup, self.p.m_sup, F_method=2)
 
 
 """  # not required for this paper
