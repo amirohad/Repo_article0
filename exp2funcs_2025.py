@@ -260,7 +260,6 @@ class Event:
             # convert to cm
             self.x_cont_cm = np.multiply(self.x_cont,self.p.pix2cm_s)
             self.z_cont_cm = np.multiply(self.z_cont,self.p.pix2cm_s)
-            self.z_cont_cm = np.multiply(self.z_cont,self.p.pix2cm_s)
 
             # save to dict only coor within decision timeframe
             # self.xz_contact = np.array([self.x_cont_cm[self.frm0_side:self.frm_dec_side],
@@ -362,7 +361,6 @@ class Event:
                       self.p.Lsup_cm, self.alpha,self.p.m_sup,F_method=1)
             self.F_bean_updt_zsup = F_of_t(self.L_contact2suptip_updt_zsup,
                       self.p.Lsup_cm, self.alpha_updt_zsup,self.p.m_sup,F_method=1) # zsup updated (in alpha and L_contact2suptip)
-
             ###################################################################
             # 2nd calculation: distances and contact length with angles 
             # need to check relative to what each position is calculated
@@ -383,7 +381,6 @@ class Event:
                       self.p.Lsup_cm, self.alpha2,self.p.m_sup,F_method=2)
             self.F_bean_2_updt_zsup = F_of_t(self.l_c_trig_updt_zsup,
                       self.p.Lsup_cm, self.alpha2_updt_zsup,self.p.m_sup,F_method=2) # zsup updated
-            
             ###################################################################
             # 3rd calculation: get support vector
             # set equilibrium point as origin (0,0,0), and support hinge as (0,0,L_tracked) in cm
@@ -400,7 +397,6 @@ class Event:
             # transpose to allow subtraction of hinge from each point, then transpose back
             self.dxyz = np.subtract(self.xyz.T,self.hinge).T # vector from hinge to track point
             self.dxyz_updt_zsup = np.subtract(self.xyz.T,self.hinge_updt_zsup).T # zsup updated
-            
             self.dz_cont = np.subtract(self.z_cont_dec,self.hinge[2]) # z distance from hinge to contact point
             self.dz_cont_updt_zsup = np.subtract(self.z_cont_dec,self.hinge_updt_zsup[2]) # zsup updated
             # we extract p for the contact point from the relation
@@ -425,7 +421,11 @@ class Event:
                       self.p.Lsup_cm, self.alpha3,self.p.m_sup,F_method=2)
             self.F_bean_3_updt_zsup = F_of_t(self.l_c_vec_updt_zsup,
                       self.p.Lsup_cm, self.alpha3_updt_zsup,self.p.m_sup,F_method=2) # zsup updated
-            self.test_lc = np.concatenate((15*np.ones(len(self.alpha2)//2), 15.5*np.ones(len(self.alpha2)//2)))[:len(self.alpha2)]
+           # test contact affects on force 
+            self.test_lc = np.concatenate((15*np.ones(len(self.alpha3)//2), 15.5*np.ones(len(self.alpha3)//2)))
+            if len(self.test_lc) < len(self.alpha3):
+                self.test_lc = np.append(self.test_lc, self.test_lc[-1])
+            self.test_lc = self.test_lc[:len(self.alpha3)]
             self.F_bean_test_l = F_of_t(self.test_lc, self.p.Lsup_cm, self.alpha3_updt_zsup, self.p.m_sup, F_method=2)
 
 
