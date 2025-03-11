@@ -80,6 +80,8 @@ class Event:
         if view == 'side':
             self.frm0_side = int(df.at[i,'First_contact_frame']) # first contact frame (starts from 1)
             self.frm_dec_side = int(df.at[i,'Slip/Twine_frame']) # frame of twine_state/slip
+            self.event_label = df.at[i,'Event Label'] # event label
+
         if view == 'top':
             self.frm0_top = int(df.at[i,'First_contact_frame']) # first contact frame (starts from 1)
             self.frm_dec_top = int(df.at[i,'Slip/Twine_frame']) # frame of twine_state/slip
@@ -209,79 +211,14 @@ class Event:
             return
         else:
             # adjust coordantes lengths
-            print(f'{len(self.z_cont_dec)=},{len(self.xyz[0])=}')
             self.z_cont_dec,self.xyz[0] = uf.adjust_len(self.z_cont_dec,self.xyz[0],choose=self.xyz[0])
-            print(f'{len(self.z_cont_dec)=},{len(self.xyz[0])=}')
-            
-            # unused:
-
-            # self.x_track_side_dec,self.xyz = uf.adjust_len(self.x_track_side_dec,self.xyz,choose=self.xyz)
-            # self.x_cont_dec,self.xyz = uf.adjust_len(self.x_cont_dec,self.xyz,choose=self.xyz)
-            # self.h = abs(np.subtract(self.z_cont_dec,self.z_cont_dec[0])) # z projection on vertical in cm vs first contact position?
-            # self.h = abs(np.subtract(self.xz_contact[1],self.xyz[2])) # z projection on vertical in cm vs current z position of trk point 
-            # self.h,self.alpha = uf.adjust_len(self.h,self.alpha,choose=self.alpha) # adjust length and trim to decision period
-            # self.L_contact2suptip = [b/(m.cos(a))+self.L_track2suptip_cm
-                                #    for a,b in zip(self.alpha,self.h)] # find hypotenus and add L_track2suptip dist. in cm
-            # self.L_contact2suptip_updt_zsup = [b/(m.cos(a))+self.L_track2suptip_cm_new
-            #                        for a,b in zip(self.alpha_updt_zsup,self.h)] # zsup updated
-            
-            ###################################################################
-            # 1st calculations:  3D distance and angle by aprox. z projection and trig
-            # self.trk_dist = np.sqrt(sum((self.xyz-self.xyz0)**2)) # root of sum of squares
-            # self.alpha_old = [m.asin(d/((self.p.Lsup_cm-
-            #                 self.L_track2suptip_cm))) for d in self.trk_dist] # trig mistake!
-            # self.alpha_old_updt_zsup = [m.asin(d/((self.p.Lsup_cm-
-            #                 self.L_track2suptip_cm_new))) for d in self.trk_dist] # zsup updated
-            
-            # self.alpha = [m.asin(d/(2*(self.p.Lsup_cm-
-            #                 self.L_track2suptip_cm))) for d in self.trk_dist] # need  x2 in denominator right?
-            # self.alpha_updt_zsup = [m.asin(d/(2*(self.p.Lsup_cm-
-            #                 self.L_track2suptip_cm_new))) for d in self.trk_dist] # zsup updated
-            
-            # if len(self.alpha)>3:
-            #     self.omega = np.gradient(self.alpha)/30 # angular velocity (1/sec)? not used this article
-
-
-            
-            # L_contact2suptip_pix[i] = np.multiply(x,pix2cm[i]) # distance of contact from sup. tip in cm
-            # calculate old force
-            # self.F_bean_old = F_of_t(self.L_contact2suptip,
-            #           self.p.Lsup_cm, self.alpha_old,self.p.m_sup,F_method=1)
-            # self.F_bean_old_updt_zsup = F_of_t(self.L_contact2suptip_updt_zsup,
-            #           self.p.Lsup_cm, self.alpha_old_updt_zsup,self.p.m_sup,F_method=1) # zsup updated (in alpha and L_contact2suptip)
-            # calculate force 1
-            # self.F_bean = F_of_t(self.L_contact2suptip,
-            #           self.p.Lsup_cm, self.alpha,self.p.m_sup,F_method=1)
-            # self.F_bean_updt_zsup = F_of_t(self.L_contact2suptip_updt_zsup,
-                    #   self.p.Lsup_cm, self.alpha_updt_zsup,self.p.m_sup,F_method=1) # zsup updated (in alpha and L_contact2suptip)
-
-            ###################################################################
-            # 2nd calculation: distances and contact length with angles 
-            # need to check relative to what each position is calculated
-            # get phi: angle of track point relative to x axis in xy plane
-            # self.phi = np.arctan2(self.xyz[1,::],self.xyz[0,::]) # np.arctan2 accepts arrays
-            # # get r_tr: distance of track point from origin in xy plane from the phi angle
-            # self.r_tr_phi = np.divide(self.xyz[0,::],np.cos(self.phi))
-            # # calculate alpha via asin(r_tr/((L-h_tip)))
-            # self.alpha2 = np.arcsin(np.divide(self.r_tr_phi,self.L_tracked))
-            # self.alpha2_updt_zsup = np.arcsin(np.divide(self.r_tr_phi,self.L_tracked_new)) # zsup updated
-            # get r_c: distance of contact point from z-axis in xy plane
-            # self.r_c = np.divide(self.x_cont_dec,np.cos(self.phi))
-            # caluculate lc - distance of contact from hinge in 3D from alpha angle
-            # self.l_c_trig = self.r_c/np.sin(self.alpha)
-            # self.l_c_trig_updt_zsup = self.r_c/np.sin(self.alpha_updt_zsup) # zsup updated
-            # calculate force 2
-            # self.F_bean_2 = F_of_t(self.l_c_trig,
-            #           self.p.Lsup_cm, self.alpha2,self.p.m_sup,F_method=2)
-            # self.F_bean_2_updt_zsup = F_of_t(self.l_c_trig_updt_zsup,
-            #           self.p.Lsup_cm, self.alpha2_updt_zsup,self.p.m_sup,F_method=2) # zsup updated
 
             ###################################################################
             # 3rd calculation: get support vector
 
             # set equilibrium point as origin (0,0,0), and support hinge as (0,0,L_tracked) in cm
             # self.hinge = np.array([0,0,self.L_tracked])
-            self.hinge_updt_zsup = np.array([0,0,self.L_tracked_new]) # zsup updated
+            self.hinge_xyz = np.array([0,0,self.L_tracked_new]) # zsup updated, hinge_updt_zsup
 
             # get r_tr from sum of x and y components squared
             self.r_tr_xy_raw = np.sqrt(self.xyz[0]**2 + self.xyz[1]**2)
@@ -290,49 +227,43 @@ class Event:
 
             # calculate alpha via asin(r_tr/((L-h_tip)))
             # self.alpha3 = np.arcsin(np.divide(self.r_tr_xy,self.L_tracked))
-            self.alpha3_updt_zsup = np.arcsin(np.divide(self.r_tr_xy,self.L_tracked_new)) # zsup updated
+            self.alpha = np.arcsin(np.divide(self.r_tr_xy,self.L_tracked_new)) # zsup updated,alpha3_updt_zsup
 
             # p*(x,y,z)track is then the parametrized vector describing the support
             # transpose to allow subtraction of hinge from each point, then transpose back
             # self.dxyz = np.subtract(self.xyz.T,self.hinge).T # vector from hinge to track point
-            self.dxyz_updt_zsup = np.subtract(self.xyz.T,self.hinge_updt_zsup).T # zsup updated
+            self.dxyz = np.subtract(self.xyz.T,self.hinge_xyz).T # zsup updated,dxyz_updt_zsup
 
             # self.dz_cont = np.subtract(self.z_cont_dec,self.hinge[2]) # z distance from hinge to contact point
-            self.dz_cont_updt_zsup = np.subtract(self.z_cont_dec,self.hinge_updt_zsup[2]) # zsup updated
+            self.dz_contact = np.subtract(self.z_cont_dec,self.hinge_xyz[2]) # zsup updated, dz_contact_updt_zsup
 
             # we extract p for the contact point from the relation
             # p = xc/xtr = yc/ytr = zc/ztr. (but we dont know y from this description)
             # self.px = np.divide(self.x_cont_dec,self.dxyz[0][:]) # denominator will be close to zero...
             # self.px_side = np.divide(self.x_cont_dec,self.x_track_side_dec) # using side view coordiantes only
 
-            # self.pz = np.divide(self.dz_cont,self.dxyz[2][:]) # denominator wont be zero, since dz is ~ L_tracked
-            self.pz_updt_zsup = np.divide(self.dz_cont_updt_zsup,self.dxyz_updt_zsup[2][:]) # zsup updated
+            # self.pz = np.divide(self.dz_contact,self.dxyz[2][:]) # denominator wont be zero, since dz is ~ L_tracked
+            self.pz = np.divide(self.dz_contact,self.dxyz[2][:]) # zsup updated,pz_updt_zsup
 
             # get py from the less volitile p (being pz):
             # self.yc = np.multiply(self.pz,self.dxyz[1][:])
-            self.yc_updt_zsup = np.multiply(self.pz_updt_zsup,self.dxyz_updt_zsup[1][:]) # zsup updated
+            self.yc = np.multiply(self.pz,self.dxyz[1][:]) # zsup updated,yc_updt_zsup
 
             # then we get the contact position (x,y,z)c = p*(xtr,ytr,ztr)
             # self.xyz_contact = np.array(self.xz_contact[0],self.yc,self.xz_contact[1])
             # self.xyz_contact = np.multiply(self.pz,self.dxyz)
-            self.xyz_contact_updt_zsup = np.multiply(self.pz_updt_zsup,self.dxyz_updt_zsup) # zsup updated
+            self.xyz_contact = np.multiply(self.pz,self.dxyz) # zsup updated,xyz_contact_updt_zsup
 
             # so the contact length lc = sqrt(xc^2+yc^2+zc^2)
             # self.l_c_vec = np.sqrt(np.sum(self.xyz_contact**2,axis=0))
-            self.l_c_vec_updt_zsup = np.sqrt(np.sum(self.xyz_contact_updt_zsup**2,axis=0)) # zsup updated
+            self.l_contact = np.sqrt(np.sum(self.xyz_contact**2,axis=0)) # zsup updated, l_c_vec_updt_zsup
 
             # calculate force 3 - use same alpha as in method 2
             # self.F_bean_3 = F_of_t(self.l_c_vec,
             #           self.p.Lsup_cm, self.alpha3,self.p.m_sup,F_method=2)
-            self.F_bean_3_updt_zsup = F_of_t(self.l_c_vec_updt_zsup,
-                      self.p.Lsup_cm, self.alpha3_updt_zsup,self.p.m_sup,F_method=2) # zsup updated
-            
-           # test contact affects on force 
-            # self.test_lc = np.concatenate((15*np.ones(len(self.alpha3)//2), 15.5*np.ones(len(self.alpha3)//2)))
-            # if len(self.test_lc) < len(self.alpha3):
-            #     self.test_lc = np.append(self.test_lc, self.test_lc[-1])
-            # self.test_lc = self.test_lc[:len(self.alpha3)]
-            # self.F_bean_test_l = F_of_t(self.test_lc, self.p.Lsup_cm, self.alpha3_updt_zsup, self.p.m_sup, F_method=2)
+            self.F_bean = F_of_t(self.l_contact,
+                      self.p.Lsup_cm, self.alpha,self.p.m_sup,F_method=2) # zsup updated,F_bean_3_updt_zsup
+
 
 #%% 0 get tracked data
 def funcget_tracked_data(filename,obj=0,view=[],camera='nikon',contact=[]):
@@ -400,6 +331,96 @@ def alpha_of_t(lsup_pix,lsup_cm,dist_pix,pix2cm,view):
     return angle,dangle
 
 #%% 3. calculate force in mg
+
+def calc_F_2(l_c,l_sup_cm,alpha_t,m_sup):
+    '''calc using distance of contact from support hinge - l_c'''
+    gcgs=980
+    dyne2mN = 1/100
+    F_mN = gcgs * m_sup * l_sup_cm * (m.tan(alpha_t)/(2*l_c)) * dyne2mN
+    return abs(F_mN)
+#%% 4. calculate force for time series
+def F_of_t(d_contact,l_sup_cm,alpha,m_sup,F_method=1):
+    N=np.size(alpha)
+    Fvec=[[]]*N
+    if F_method==1:
+        for i in range(N):
+            Fvec[i] = calc_F_1(d_contact[i], l_sup_cm, alpha[i], m_sup)
+    elif F_method==2:
+        for i in range(N):
+            Fvec[i] = calc_F_2(d_contact[i], l_sup_cm, alpha[i], m_sup)
+    return Fvec 
+#%% legacy 
+
+            ###################################################################
+            # unused:
+
+            # self.x_track_side_dec,self.xyz = uf.adjust_len(self.x_track_side_dec,self.xyz,choose=self.xyz)
+            # self.x_cont_dec,self.xyz = uf.adjust_len(self.x_cont_dec,self.xyz,choose=self.xyz)
+            # self.h = abs(np.subtract(self.z_cont_dec,self.z_cont_dec[0])) # z projection on vertical in cm vs first contact position?
+            # self.h = abs(np.subtract(self.xz_contact[1],self.xyz[2])) # z projection on vertical in cm vs current z position of trk point 
+            # self.h,self.alpha = uf.adjust_len(self.h,self.alpha,choose=self.alpha) # adjust length and trim to decision period
+            # self.L_contact2suptip = [b/(m.cos(a))+self.L_track2suptip_cm
+                                #    for a,b in zip(self.alpha,self.h)] # find hypotenus and add L_track2suptip dist. in cm
+            # self.L_contact2suptip_updt_zsup = [b/(m.cos(a))+self.L_track2suptip_cm_new
+            #                        for a,b in zip(self.alpha_updt_zsup,self.h)] # zsup updated
+            
+            ###################################################################
+            # 1st calculations:  3D distance and angle by aprox. z projection and trig
+            # self.trk_dist = np.sqrt(sum((self.xyz-self.xyz0)**2)) # root of sum of squares
+            # self.alpha_old = [m.asin(d/((self.p.Lsup_cm-
+            #                 self.L_track2suptip_cm))) for d in self.trk_dist] # trig mistake!
+            # self.alpha_old_updt_zsup = [m.asin(d/((self.p.Lsup_cm-
+            #                 self.L_track2suptip_cm_new))) for d in self.trk_dist] # zsup updated
+            
+            # self.alpha = [m.asin(d/(2*(self.p.Lsup_cm-
+            #                 self.L_track2suptip_cm))) for d in self.trk_dist] # need  x2 in denominator right?
+            # self.alpha_updt_zsup = [m.asin(d/(2*(self.p.Lsup_cm-
+            #                 self.L_track2suptip_cm_new))) for d in self.trk_dist] # zsup updated
+            
+            # if len(self.alpha)>3:
+            #     self.omega = np.gradient(self.alpha)/30 # angular velocity (1/sec)? not used this article
+
+
+            
+            # L_contact2suptip_pix[i] = np.multiply(x,pix2cm[i]) # distance of contact from sup. tip in cm
+            # calculate old force
+            # self.F_bean_old = F_of_t(self.L_contact2suptip,
+            #           self.p.Lsup_cm, self.alpha_old,self.p.m_sup,F_method=1)
+            # self.F_bean_old_updt_zsup = F_of_t(self.L_contact2suptip_updt_zsup,
+            #           self.p.Lsup_cm, self.alpha_old_updt_zsup,self.p.m_sup,F_method=1) # zsup updated (in alpha and L_contact2suptip)
+            # calculate force 1
+            # self.F_bean = F_of_t(self.L_contact2suptip,
+            #           self.p.Lsup_cm, self.alpha,self.p.m_sup,F_method=1)
+            # self.F_bean_updt_zsup = F_of_t(self.L_contact2suptip_updt_zsup,
+                    #   self.p.Lsup_cm, self.alpha_updt_zsup,self.p.m_sup,F_method=1) # zsup updated (in alpha and L_contact2suptip)
+
+            ###################################################################
+            # 2nd calculation: distances and contact length with angles 
+            # need to check relative to what each position is calculated
+            # get phi: angle of track point relative to x axis in xy plane
+            # self.phi = np.arctan2(self.xyz[1,::],self.xyz[0,::]) # np.arctan2 accepts arrays
+            # # get r_tr: distance of track point from origin in xy plane from the phi angle
+            # self.r_tr_phi = np.divide(self.xyz[0,::],np.cos(self.phi))
+            # # calculate alpha via asin(r_tr/((L-h_tip)))
+            # self.alpha2 = np.arcsin(np.divide(self.r_tr_phi,self.L_tracked))
+            # self.alpha2_updt_zsup = np.arcsin(np.divide(self.r_tr_phi,self.L_tracked_new)) # zsup updated
+            # get r_c: distance of contact point from z-axis in xy plane
+            # self.r_c = np.divide(self.x_cont_dec,np.cos(self.phi))
+            # caluculate lc - distance of contact from hinge in 3D from alpha angle
+            # self.l_c_trig = self.r_c/np.sin(self.alpha)
+            # self.l_c_trig_updt_zsup = self.r_c/np.sin(self.alpha_updt_zsup) # zsup updated
+            # calculate force 2
+            # self.F_bean_2 = F_of_t(self.l_c_trig,
+            #           self.p.Lsup_cm, self.alpha2,self.p.m_sup,F_method=2)
+            # self.F_bean_2_updt_zsup = F_of_t(self.l_c_trig_updt_zsup,
+            #           self.p.Lsup_cm, self.alpha2_updt_zsup,self.p.m_sup,F_method=2) # zsup updated
+                        
+           # test contact affects on force 
+            # self.test_lc = np.concatenate((15*np.ones(len(self.alpha3)//2), 15.5*np.ones(len(self.alpha3)//2)))
+            # if len(self.test_lc) < len(self.alpha3):
+            #     self.test_lc = np.append(self.test_lc, self.test_lc[-1])
+            # self.test_lc = self.test_lc[:len(self.alpha3)]
+            # self.F_bean_test_l = F_of_t(self.test_lc, self.p.Lsup_cm, self.alpha3_updt_zsup, self.p.m_sup, F_method=2)
 # def calc_F_1(d_contact,l_sup_cm,alpha_t,m_sup):
 #     '''calc using distance of contact from support tip - l'''
 #     gcgs=980
@@ -411,21 +432,4 @@ def alpha_of_t(lsup_pix,lsup_cm,dist_pix,pix2cm,view):
 # to get the force in dyne-> *gcgs=980 cm/s^2
     # return abs(F_mN)
 
-def calc_F_2(l_c,l_sup_cm,alpha_t,m_sup):
-    '''calc using distance of contact from support hinge - l_c'''
-    gcgs=980
-    dyne2mN = 1/100
-    F_mN = gcgs * m_sup * l_sup_cm * (m.tan(alpha_t)/(2*l_c)) * dyne2mN
-    return abs(F_mN)
-# 4. calculate force for time series
-def F_of_t(d_contact,l_sup_cm,alpha,m_sup,F_method=1):
-    N=np.size(alpha)
-    Fvec=[[]]*N
-    if F_method==1:
-        for i in range(N):
-            Fvec[i] = calc_F_1(d_contact[i], l_sup_cm, alpha[i], m_sup)
-    elif F_method==2:
-        for i in range(N):
-            Fvec[i] = calc_F_2(d_contact[i], l_sup_cm, alpha[i], m_sup)
-    return Fvec 
 #%%

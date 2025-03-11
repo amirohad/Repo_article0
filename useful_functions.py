@@ -1117,10 +1117,20 @@ def set_grid(ax,x_range,y_range):
     ax.minorticks_on()
     ax.tick_params(axis='both', which='both', direction='in', length=5,
                    width=1, colors='black', grid_color='gray', grid_alpha=0.7)
-    ax.xaxis.set_major_locator(plt.MultipleLocator(round_to_first_significant_digit(x_range/5)))  # Set major grid spacing for x-axis
-    ax.xaxis.set_minor_locator(plt.MultipleLocator(round_to_first_significant_digit(x_range/10))) # Set minor grid spacing for x-axis
-    ax.yaxis.set_major_locator(plt.MultipleLocator(round_to_first_significant_digit(y_range/5)))  # Set major grid spacing for y-axis
-    ax.yaxis.set_minor_locator(plt.MultipleLocator(round_to_first_significant_digit(y_range/10))) # Set minor grid spacing for y-axis
+    # Set major and minor grid spacing for x-axis and y-axis
+    x_major_locator = plt.MultipleLocator(x_range / 5)
+    x_minor_locator = plt.MultipleLocator(x_range / 10)
+    y_major_locator = plt.MultipleLocator(y_range / 5)
+    y_minor_locator = plt.MultipleLocator(y_range / 10)
+
+    ax.xaxis.set_major_locator(x_major_locator)
+    ax.xaxis.set_minor_locator(x_minor_locator)
+    ax.yaxis.set_major_locator(y_major_locator)
+    ax.yaxis.set_minor_locator(y_minor_locator)
+
+    # Set major and minor tick labels with rounding to the first significant digit
+    ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f'{round_to_first_significant_digit(x):g}'))
+    ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda y, _: f'{round_to_first_significant_digit(y):g}'))
 
 #%% write function source code
 # import inspect
