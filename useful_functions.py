@@ -1067,7 +1067,7 @@ def funcget_tracked_data(filename,obj=0,view=[],camera='nikon',contact=[]):
                 w[i]=float(currentline[2])
                 h[i]=float(currentline[3])
                 xcntr[i]=xtl[i]+w[i]/2 # calculate x coordinate of box center
-                ycntr[i]=ytl[i]-h[i]/2
+                ycntr[i]=ytl[i]+h[i]/2 # corrected from ytl[i]+h[i]/2 on 6/5/2025, check data
                 # if view=='top':
                 #     dist[i]=np.sqrt((xcntr[i]-xcntr[0])**2+(ycntr[i]-ycntr[0])**2)
                 # else:
