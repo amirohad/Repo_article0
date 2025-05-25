@@ -8,7 +8,9 @@
 
 * Inherent noise data is available in the CSRT_fluctuations text file. 
 
-* 3 3D-print files are included in the 'lens add-on' folder.
+* 4 3D-print files are included in the 'lens add-on' folder.
+
+* See video S1 for side and top view angles of contact during force application, with a graph of the changing force over time (30s/frame).
 
 
 
