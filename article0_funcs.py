@@ -31,7 +31,91 @@ from matplotlib.colors import Normalize
 import matplotlib.pyplot as plt
 
 sys.path.append('..')
-import useful_functions as uf # my functions
+# import useful_functions as uf # my functions
+#%% Define functions
+def adjust_len(a,b,choose=[]): # add strt,end?
+    '''a,b are diff length, make same length.
+        choose = a, to make b same length as a'''
+    la=len(a)
+    lb=len(b)
+    if la>lb:
+        if choose is None or choose is a:
+            b = np.pad(b,[0,la-lb])
+        elif np.array_equal(choose, b):
+            a = a[:lb]
+    elif la<lb:
+        if choose is None or choose is b:
+            a = np.pad(a,[0,lb-la])
+        elif np.array_equal(choose, a):
+            b = b[:la]
+
+    return a,b
+
+def get_Tcn(CNfolder,df,i):
+    '''cnfolder is where the cn images are, df is data frame of events
+    i is the row within data frame'''
+    try:
+        file_lst = os.listdir(CNfolder)
+        frame = []
+        for file in file_lst:
+            # if re.findall('DSC_\d{4,5}',file):
+            #     frame.append(int(re.findall('DSC_\d{4,5}',file)[0][4:]))
+            if re.findall('\d{4,5}',file):
+                frame.append(int(re.findall('\d{4,5}',file)[0]))
+        frame = sorted(frame)
+        diff = abs(np.subtract(frame[1:],frame[:-1]))
+        T_cn = np.divide(diff,2)
+        avgT_cn = np.mean(T_cn)
+        # print(T_cn,avgT_cn)
+        return T_cn,avgT_cn
+    except:
+        singleT = float(df.at[i,'C.N_time(minutes)'])
+        return singleT,singleT
+    
+def funcget_tracked_data(filename,obj=0,view=[],camera='nikon',contact=[]):
+    with open(filename,"r") as datafile:
+        lines= datafile.readlines()
+        # del lines[0] # remove first line to avoid 2 zero times
+        N=np.size(lines,0) # number of lines
+        xtl=[[]]*N # x top left
+        ytl=[[]]*N # y top left
+        w=[[]]*N # box width
+        h=[[]]*N # box height
+        index=[[]]*N # tracked object index
+        xcntr=[[]]*N # box x center
+        ycntr=[[]]*N # box y center
+        # dist=[[]]*N # distance from equilibrium position
+        timer=[[]]*N # time marks
+        timer[0]=0 # time starts at zero
+        # timer_epoch1=[[]]*N
+        i=0 # count rows
+# x,y,w,h ; start at upper left corner
+        for line in lines:
+            if line==[]: break
+            currentline = line.split(",") # split by ','
+            index[i]=int(currentline[-2]) # get index of tracked object
+            if index[i] in obj:        # if current line belongs to the requested tracked object
+                xtl[i]=float(currentline[0]) # xtl- x top left
+                ytl[i]=float(currentline[1])
+                w[i]=float(currentline[2])
+                h[i]=float(currentline[3])
+                xcntr[i]=xtl[i]+w[i]/2 # calculate x coordinate of box center
+                ycntr[i]=ytl[i]-h[i]/2
+                # if view=='top':
+                #     dist[i]=np.sqrt((xcntr[i]-xcntr[0])**2+(ycntr[i]-ycntr[0])**2)
+                # else:
+                #     dist[i]=abs(xcntr[i]-xcntr[0])
+                if camera=='nikon':
+                    timer = [30*x for x in range(N)]
+
+            else:
+                print('skipped non-selected tracked object')
+                print(timer[i],type(timer[i]),i,currentline)
+            i+=1
+
+        # x = np.subtract(xcntr,xcntr[0]) # return x relative to start point
+        # y = np.subtract(ycntr,ycntr[0]) # return y relative to start point
+        return xcntr,ycntr,timer
 #%% A - Plant class
 class Plant:
     """ plant class, insert all parameters from XL, Youngs modulus,
@@ -67,7 +151,7 @@ class Plant:
 
     def cn_data(self,df,i):
         '''df=data drame, i=index of data frame'''
-        self.T,self.avgT = uf.get_Tcn(self.plant_path,df,i) # get Tcn from excel or folder
+        self.T,self.avgT = get_Tcn(self.plant_path,df,i) # get Tcn from excel or folder
         self.omega0 = 2*m.pi/self.avgT # base rotation angular velocity
 
 #%% B - Event class
@@ -198,7 +282,7 @@ class Event:
             self.xyz[0,::] = self.dec_x_track_top
             self.xyz[1,::] = self.dec_y_track_top
             self.dec_z_track_side,self.dec_y_track_top = \
-                uf.adjust_len(self.dec_z_track_side,self.dec_y_track_top,
+                adjust_len(self.dec_z_track_side,self.dec_y_track_top,
                   choose=self.dec_y_track_top)
             self.xyz[2,::] = self.dec_z_track_side
 
@@ -211,7 +295,7 @@ class Event:
             return
         else:
             # adjust coordantes lengths
-            self.z_cont_dec,self.xyz[0] = uf.adjust_len(self.z_cont_dec,self.xyz[0],choose=self.xyz[0])
+            self.z_cont_dec,self.xyz[0] = adjust_len(self.z_cont_dec,self.xyz[0],choose=self.xyz[0])
 
             ###################################################################
             # 3rd calculation: get support vector
