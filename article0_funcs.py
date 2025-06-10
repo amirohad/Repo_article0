@@ -141,11 +141,13 @@ class Plant:
 
         # z position of bottom tip of support
         self.support_base_z_pos_pix = float(df.at['side_equil_ypos-bot_sup(pixels)'])
-        try: # if new measurement exists
-            self.support_base_z_pos_pix_new = float(df.at['new_y_pos_supp_bot(pixels)']) # updated z position from side image of supp bottom
-        except: 
+        val = float(df.at['new_y_pos_supp_bot(pixels)'])
+        if np.isnan(val):
             self.support_base_z_pos_pix_new = self.support_base_z_pos_pix
-            print('no new z position of support bottom')
+            print('new_y_pos_supp_bot(pixels) is NaN, using original support base z position')
+        else:
+            self.support_base_z_pos_pix_new = val
+
         # self.support_base_z_pos_cm = self.support_base_z_pos_pix*self.pix2cm_s # not used
 
 
@@ -383,7 +385,7 @@ def funcget_tracked_data(filename,obj=0,view=[],camera='nikon',contact=[]):
                 #     dist[i]=np.sqrt((xcntr[i]-xcntr[0])**2+(ycntr[i]-ycntr[0])**2)
                 # else:
                 #     dist[i]=abs(xcntr[i]-xcntr[0])
-                if camera=='nikon':
+                if camera=='nikon': # check this line...needs to move to top?
                     timer = [30*x for x in range(N)]
 
             else:
