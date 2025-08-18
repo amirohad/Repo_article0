@@ -20,7 +20,7 @@ import math as m
 import numpy as np
 import re
 import time
-import seaborn
+# import seaborn
 import scipy
 import sys
 import os
@@ -136,7 +136,8 @@ class Plant:
         self.pix2cm_t = float(df.at['Top_pix2cm']) # top pixel to cm ratio
 
         # pendulum lenth in cm: add measured support length with pix2cm converted straw2hinge 
-        self.Lsup_cm = df.at['Dist_straw_from_hinge(pixels)']*self.pix2cm_s + df.at['Straw_Length(cm)'] 
+        self.Lsup_cm = df.at['Dist_straw_from_hinge(pixels)']*self.pix2cm_s +\
+                        df.at['Straw_Length(cm)'] 
         # self.Lsup_cm = self.Lsup_pix*self.pix2cm_s # support lenth in cm
 
         # z position of bottom tip of support
@@ -435,4 +436,37 @@ def F_of_t(d_contact,l_sup_cm,alpha,m_sup,F_method=1):
         for i in range(N):
             Fvec[i] = calc_F_2(d_contact[i], l_sup_cm, alpha[i], m_sup)
     return Fvec 
+#%% 5. Error calculations
+def calc_errors(x,y,z,z_c, sigma_noise, sigma_tr, rho_side, rho_top,k,
+                alpha,r_tr, L,dL,h,F,mass,dmass,lc):
+    '''calculate the error in x,y,z coordinates over time '''
+    # vector lengths
+    V_tr = np.sqrt(x**2 + y**2 + (z)**2) # vector length of tracked point from hinge?
+
+    # coordinate errors
+    x_err = np.sqrt(sigma_noise**2 + (sigma_tr**2)*rho_top**2) # x error
+    y_err = np.sqrt(sigma_noise**2 + (sigma_tr**2)*rho_top**2) # y error
+    z_err = np.sqrt(sigma_noise**2 + (sigma_tr**2)*rho_side**2) # z error
+    
+    sigma_side = z_err
+    sigma_top = x_err
+
+    dV_tr = (1/V_tr)*np.sqrt((x*sigma_top)**2 + (y*sigma_top)**2 +(z*sigma_side)**2)
+
+    # lc error
+    dk = (sigma_side / ((L-z)**2))  * np.sqrt(1+((L-z_c)/(L-z))**2)
+    lc_err = np.sqrt((dk**2)*V_tr**2+ (dV_tr**2)*k**2)
+
+    # angle error
+    alpha_err = np.tan(alpha) * np.sqrt((sigma_top/r_tr)**2 + 2*(sigma_side/(L-h))**2)
+
+    # force error in mN
+    dyne2mN = 1/100 # convert dyne to mN
+    F = np.array(F)
+    F_err = (1/F)*np.sqrt((dmass/mass)**2 + (dL/L)**2 + (lc_err/np.sqrt(lc))**2 +
+                    ((np.tan(alpha)**2)/(1+(np.tan(alpha)**2))*alpha_err)**2)*dyne2mN
+    
+    return x_err, y_err, z_err, lc_err, alpha_err, F_err,dk
+    
+
 #%%
