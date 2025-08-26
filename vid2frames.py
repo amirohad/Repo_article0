@@ -24,6 +24,6 @@ def save_video_frames(video_path, output_folder):
     print(f"Saved {frame_count} frames to {output_folder}")
 
 # Example usage
-video_path = r"C:\Users\Amir\Documents\PHD\Experiments\Force Measurements\Exp2_Pendulum\Measurements\74\Side\CSRT_074_1\1.avi"
-output_folder = r"C:\Users\Amir\Documents\PHD\Experiments\Force Measurements\Exp2_Pendulum\Measurements\74\Side\1_vid2frames"
+video_path = r"C:\Users\Amir\Documents\PHD\Thesis\My Articles\0_Pendulum_measured_forces\Data\Example trajectories\side_top_f(t)_scale.mp4"
+output_folder = r"C:\Users\Amir\Documents\PHD\Thesis\My Articles\0_Pendulum_measured_forces\Data\Example trajectories"
 save_video_frames(video_path, output_folder)
